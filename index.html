@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>RemitCompare — Ireland to Africa</title>
+  <style>
+    :root {
+      --ink: #182230;
+      --muted: #657184;
+      --line: #e2e7ef;
+      --paper: #ffffff;
+      --bg: #f5f7fb;
+      --accent: #176b58;
+      --accent-soft: #e7f5ef;
+      --warning: #8a5a08;
+      --warning-soft: #fff5dc;
+      --danger: #a13b3b;
+      --danger-soft: #fff0ef;
+      --shadow: 0 10px 30px rgba(24, 34, 48, .06);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--accent); }
+    button, input, select { font: inherit; }
+    .shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 25px 0 18px; }
+    .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 800; letter-spacing: -.03em; font-size: 1.2rem; }
+    .brand-mark {
+      display: grid; place-items: center; width: 40px; height: 40px; border-radius: 13px;
+      color: white; background: var(--accent); font-weight: 900;
+    }
+    .demo-pill {
+      display: inline-flex; align-items: center; gap: 7px; border: 1px solid #f0d28a;
+      background: var(--warning-soft); color: #754b00; padding: 7px 11px; border-radius: 999px;
+      font-size: .78rem; font-weight: 800; letter-spacing: .02em;
+    }
+    .hero { padding: 27px 0 23px; }
+    .eyebrow { color: var(--accent); text-transform: uppercase; font-size: .76rem; font-weight: 800; letter-spacing: .12em; }
+    h1 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.04; letter-spacing: -.055em; margin: 10px 0 14px; max-width: 780px; }
+    .lede { color: var(--muted); max-width: 700px; margin: 0; font-size: 1.04rem; }
+    .notice {
+      margin-top: 20px; padding: 13px 15px; border-radius: 12px; border: 1px solid #f0d28a;
+      background: #fffaf0; color: #6c4b12; font-size: .9rem;
+    }
+    .notice strong { display: block; margin-bottom: 2px; }
+    .panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .controls { padding: 22px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin: 20px 0 18px; }
+    label { display: block; font-size: .84rem; font-weight: 750; margin-bottom: 7px; }
+    .field-note { color: var(--muted); font-size: .76rem; margin-top: 6px; }
+    .input-wrap { display: flex; align-items: center; border: 1px solid #cfd7e3; border-radius: 11px; background: white; overflow: hidden; }
+    .currency { padding: 11px 12px; color: var(--muted); border-right: 1px solid var(--line); font-weight: 750; }
+    input, select { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid #cfd7e3; border-radius: 11px; background: white; color: var(--ink); }
+    .input-wrap input { border: 0; border-radius: 0; outline-offset: -3px; }
+    .select-wrap select { cursor: pointer; }
+    .summary-row { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 26px 0 12px; }
+    h2 { margin: 0; font-size: 1.35rem; letter-spacing: -.025em; }
+    .summary-copy { color: var(--muted); font-size: .88rem; margin-top: 3px; }
+    .sort-wrap { min-width: 205px; }
+    .sort-wrap label { margin-bottom: 5px; }
+    .results { overflow: hidden; }
+    .table-head, .provider-row {
+      display: grid; grid-template-columns: minmax(145px, 1.3fr) minmax(100px, .8fr) minmax(110px, .9fr) minmax(125px, 1fr) minmax(125px, 1fr);
+      gap: 14px; align-items: center; padding: 15px 20px;
+    }
+    .table-head { background: #f9fafc; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .73rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+    .provider-row { border-bottom: 1px solid var(--line); min-height: 98px; }
+    .provider-row:last-child { border-bottom: 0; }
+    .provider-name { font-weight: 800; }
+    .provider-sub { color: var(--muted); font-size: .75rem; margin-top: 3px; }
+    .payout { font-weight: 850; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+    .subvalue { color: var(--muted); font-size: .77rem; margin-top: 3px; }
+    .status { display: inline-flex; width: fit-content; align-items: center; border-radius: 999px; padding: 4px 8px; font-size: .72rem; font-weight: 800; }
+    .status.sample { background: #edf0f5; color: #4c596b; }
+    .status.stale { background: var(--warning-soft); color: var(--warning); }
+    .status.missing { background: var(--danger-soft); color: var(--danger); }
+    .status.fresh { background: var(--accent-soft); color: var(--accent); }
+    .provider-actions { display: flex; flex-direction: column; align-items: start; gap: 6px; }
+    .link-button { font-size: .8rem; font-weight: 750; text-decoration: none; }
+    .rank { display: inline-grid; place-items: center; width: 25px; height: 25px; border-radius: 8px; background: #edf0f5; color: #4c596b; font-size: .75rem; margin-right: 7px; }
+    .best .rank { background: var(--accent-soft); color: var(--accent); }
+    .best { background: #fbfefc; }
+    .no-data { color: var(--muted); font-weight: 700; }
+    .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 22px 0; }
+    .info-card { padding: 20px; }
+    .info-card h3 { margin: 0 0 8px; font-size: 1rem; }
+    .info-card p, .info-card li { color: var(--muted); font-size: .88rem; }
+    .info-card p { margin: 0; }
+    .info-card ul { padding-left: 19px; margin: 8px 0 0; }
+    .feedback { padding: 20px; margin: 22px 0; }
+    .feedback h2 { font-size: 1.1rem; }
+    .feedback-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .feedback button {
+      border: 1px solid #cfd7e3; border-radius: 10px; background: white; padding: 9px 13px;
+      cursor: pointer; font-weight: 700;
+    }
+    .feedback button:hover { border-color: var(--accent); color: var(--accent); }
+    .feedback-message { margin-top: 10px; color: var(--accent); font-size: .85rem; min-height: 1.2em; }
+    footer { padding: 8px 0 35px; color: var(--muted); font-size: .8rem; }
+    .footer-links { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 7px; }
+    @media (max-width: 850px) {
+      .controls { grid-template-columns: 1fr 1fr; }
+      .controls > :nth-child(2) { grid-column: 1 / -1; }
+      .table-head { display: none; }
+      .provider-row { grid-template-columns: 1fr 1fr; gap: 13px; padding: 18px; }
+      .provider-cell::before { content: attr(data-label); display: block; color: var(--muted); text-transform: uppercase; font-size: .68rem; font-weight: 800; letter-spacing: .06em; margin-bottom: 4px; }
+      .provider-cell:first-child { grid-column: 1 / -1; }
+      .provider-actions { align-items: start; }
+      .method-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .shell { width: min(100% - 22px, 1120px); }
+      header { padding-top: 16px; }
+      .demo-pill { font-size: .68rem; padding: 6px 8px; }
+      .controls { grid-template-columns: 1fr; padding: 16px; }
+      .controls > :nth-child(2) { grid-column: auto; }
+      .summary-row { align-items: stretch; flex-direction: column; }
+      .sort-wrap { width: 100%; }
+      .provider-row { grid-template-columns: 1fr 1fr; padding: 15px; gap: 15px 10px; }
+      .payout { font-size: .98rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell">
+    <div class="brand-row">
+      <div class="brand"><span class="brand-mark">R</span><span>RemitCompare <span style="font-weight:500;color:#657184">/ Research prototype</span></span></div>
+      <span class="demo-pill">● DEMO DATA ONLY</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow" id="corridor-eyebrow">Ireland → Kenya</div>
+      <h1>Know what your family could receive.</h1>
+      <p class="lede">Compare transfer costs and illustrative payouts for selected African destinations. This early prototype does not fetch live rates or verify provider availability.</p>
+      <div class="notice" role="note">
+        <strong>Important: all prices below are fictional.</strong>
+        Do not use these figures to make a transfer decision. Provider names are included as examples only; no quote has been verified for this demo.
+      </div>
+    </section>
+
+    <section class="panel controls" aria-label="Transfer details">
+      <div class="select-wrap">
+        <label for="country">Where are you sending money?</label>
+        <select id="country">
+          <option value="KE">Kenya (KES)</option>
+          <option value="EG">Egypt (EGP)</option>
+          <option value="ZA">South Africa (ZAR)</option>
+          <option value="TZ">Tanzania (TZS)</option>
+          <option value="NG">Nigeria (NGN) — candidate corridor</option>
+        </select>
+        <div class="field-note">Sending country remains Ireland. Destination support must be verified.</div>
+      </div>
+      <div>
+        <label for="amount">How much do you want to send?</label>
+        <div class="input-wrap"><span class="currency">EUR €</span><input id="amount" type="number" min="1" max="100000" step="1" value="200" inputmode="decimal" aria-describedby="amount-note"></div>
+        <div class="field-note" id="amount-note">Enter the amount in euros. The sample calculations update locally.</div>
+      </div>
+      <div class="select-wrap">
+        <label for="funding">How will you pay?</label>
+        <select id="funding">
+          <option value="bank">Bank transfer</option>
+          <option value="debit">Debit card</option>
+        </select>
+        <div class="field-note">Demo quotes differ by funding method.</div>
+      </div>
+      <div class="select-wrap">
+        <label for="payout">How should the recipient receive it?</label>
+        <select id="payout">
+          <option value="mobile">Mobile money</option>
+          <option value="bank">Bank account</option>
+          <option value="cash">Cash pickup</option>
+        </select>
+        <div class="field-note">Only matching fictional demo scenarios are displayed.</div>
+      </div>
+    </section>
+
+    <section aria-labelledby="results-title">
+      <div class="summary-row">
+        <div>
+          <h2 id="results-title">Compare providers</h2>
+          <div class="summary-copy" id="result-summary">Illustrative results for €200 • Ireland to Kenya</div>
+        </div>
+        <div class="sort-wrap">
+          <label for="sort">Sort results</label>
+          <select id="sort">
+            <option value="payout">Highest recipient payout</option>
+            <option value="fee">Lowest sample fee</option>
+            <option value="name">Provider name (A–Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel results" id="results" aria-live="polite">
+        <div class="table-head" aria-hidden="true">
+          <div>Provider</div><div>Transfer fee</div><div>Sample rate</div><div>Recipient receives</div><div>Quote status</div>
+        </div>
+        <div id="provider-list"></div>
+      </div>
+    </section>
+
+    <section class="method-grid">
+      <article class="panel info-card">
+        <h3>What does “total cost” mean?</h3>
+        <p>The fee is only one component. The exchange rate also affects the amount delivered. In a real comparison, the best starting point is the verified amount the provider says the recipient will receive, under the same transfer conditions.</p>
+      </article>
+      <article class="panel info-card">
+        <h3>Destinations and data limits</h3>
+        <ul>
+          <li>Destination selector: Kenya, Egypt, South Africa, Tanzania and Nigeria.</li>
+          <li>Nigeria is a candidate corridor, not a verified “top” Ireland-to-Africa corridor.</li>
+          <li>All sample fees and rates are fictional; provider support for each corridor is unverified.</li>
+          <li>Changing inputs recalculates demonstration scenarios only; no live quote is requested.</li>
+          <li>No money is transferred and no personal information is sent anywhere.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="panel feedback">
+      <h2>Help test the concept</h2>
+      <p class="summary-copy">If this were populated with verified quotes, what would matter most to you?</p>
+      <div class="feedback-row">
+        <button type="button" data-feedback="payout">Highest amount received</button>
+        <button type="button" data-feedback="cost">True total cost</button>
+        <button type="button" data-feedback="speed">Delivery speed</button>
+        <button type="button" data-feedback="trust">Trust and reliability</button>
+      </div>
+      <div class="feedback-message" id="feedback-message" role="status"></div>
+    </section>
+  </main>
+
+  <footer class="shell">
+    <strong>RemitCompare · Early research prototype</strong>
+    <div>This page is a local demonstration, not financial advice or a live price comparison service. Verify any transfer directly with the provider before sending money.</div>
+    <div class="footer-links">
+      <a href="https://remittanceprices.worldbank.org/" target="_blank" rel="noopener noreferrer">World Bank Remittance Prices Worldwide</a>
+      <a href="https://wise.com/ie/" target="_blank" rel="noopener noreferrer">Example provider website (not a verified corridor quote)</a>
+    </div>
+  </footer>
+
+  <script>
+    "use strict";
+
+    // FICTIONAL DEMONSTRATION DATA ONLY.
+    // These records are product mock-ups, NOT real provider quotes or proof of corridor support.
+    // Never use these values for a real transfer decision.
+    const currencies = {
+      KE: { name: "Kenya", currency: "KES", digits: 0 },
+      EG: { name: "Egypt", currency: "EGP", digits: 0 },
+      ZA: { name: "South Africa", currency: "ZAR", digits: 2 },
+      TZ: { name: "Tanzania", currency: "TZS", digits: 0 },
+      NG: { name: "Nigeria", currency: "NGN", digits: 0 }
+    };
+
+    // Each destination has illustrative records so the country selector can be tested.
+    // The numbers are intentionally fictional and must be replaced by verified, timestamped quotes.
+    const demoQuotes = [
+      // Kenya
+      { id:"ke-wise", country:"KE", provider:"Wise (example only)", fee:2.50, rate:168.20, funding:"bank", payout:"mobile", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+      { id:"ke-remitly", country:"KE", provider:"Remitly (example only)", fee:0, rate:165.40, funding:"debit", payout:"mobile", status:"stale", quoteTime:"Fictional — deliberately stale", note:"Stale-state example; excluded from ranking." },
+      { id:"ke-westernunion", country:"KE", provider:"Western Union (example only)", fee:3.99, rate:169.10, funding:"bank", payout:"bank", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+      { id:"ke-moneygram", country:"KE", provider:"MoneyGram (example only)", fee:null, rate:null, funding:"bank", payout:"cash", status:"missing", quoteTime:"No quote", note:"Missing-data example; cannot be ranked." },
+      { id:"ke-worldremit", country:"KE", provider:"WorldRemit (example only)", fee:1.99, rate:167.60, funding:"bank", payout:"mobile", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+
+      // Egypt — fictional mock-ups
+      { id:"eg-wise", country:"EG", provider:"Wise (example only)", fee:2.75, rate:31.80, funding:"bank", payout:"mobile", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+      { id:"eg-remitly", country:"EG", provider:"Remitly (example only)", fee:1.50, rate:31.20, funding:"debit", payout:"cash", status:"stale", quoteTime:"Fictional — deliberately stale", note:"Stale-state example; excluded from ranking." },
+      { id:"eg-westernunion", country:"EG", provider:"Western Union (example only)", fee:3.99, rate:32.10, funding:"bank", payout:"cash", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+      { id:"eg-moneygram", country:"EG", provider:"MoneyGram (example only)", fee:null, rate:null, funding:"bank", payout:"mobile", status:"missing", quoteTime:"No quote", note:"Missing-data example; cannot be ranked." },
+      { id:"eg-worldremit", country:"EG", provider:"WorldRemit (example only)", fee:2.25, rate:31.65, funding:"bank", payout:"bank", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+
+      // South Africa — fictional mock-ups
+      { id:"za-wise", country:"ZA", provider:"Wise (example only)", fee:2.50, rate:20.10, funding:"bank", payout:"mobile", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+      { id:"za-remitly", country:"ZA", provider:"Remitly (example only)", fee:0, rate:19.80, funding:"debit", payout:"cash", status:"stale", quoteTime:"Fictional — deliberately stale", note:"Stale-state example; excluded from ranking." },
+      { id:"za-westernunion", country:"ZA", provider:"Western Union (example only)", fee:3.99, rate:20.25, funding:"bank", payout:"cash", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+      { id:"za-moneygram", country:"ZA", provider:"MoneyGram (example only)", fee:null, rate:null, funding:"bank", payout:"mobile", status:"missing", quoteTime:"No quote", note:"Missing-data example; cannot be ranked." },
+      { id:"za-worldremit", country:"ZA", provider:"WorldRemit (example only)", fee:1.99, rate:20.00, funding:"bank", payout:"bank", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+
+      // Tanzania — fictional mock-ups
+      { id:"tz-wise", country:"TZ", provider:"Wise (example only)", fee:2.50, rate:2750, funding:"bank", payout:"mobile", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+      { id:"tz-remitly", country:"TZ", provider:"Remitly (example only)", fee:0, rate:2690, funding:"debit", payout:"mobile", status:"stale", quoteTime:"Fictional — deliberately stale", note:"Stale-state example; excluded from ranking." },
+      { id:"tz-westernunion", country:"TZ", provider:"Western Union (example only)", fee:3.99, rate:2780, funding:"bank", payout:"cash", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+      { id:"tz-moneygram", country:"TZ", provider:"MoneyGram (example only)", fee:null, rate:null, funding:"bank", payout:"mobile", status:"missing", quoteTime:"No quote", note:"Missing-data example; cannot be ranked." },
+      { id:"tz-worldremit", country:"TZ", provider:"WorldRemit (example only)", fee:1.99, rate:2730, funding:"bank", payout:"mobile", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+
+      // Nigeria — candidate corridor; fictional mock-ups only
+      { id:"ng-wise", country:"NG", provider:"Wise (example only)", fee:2.50, rate:1650, funding:"bank", payout:"mobile", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+      { id:"ng-remitly", country:"NG", provider:"Remitly (example only)", fee:0, rate:1610, funding:"debit", payout:"cash", status:"stale", quoteTime:"Fictional — deliberately stale", note:"Stale-state example; excluded from ranking." },
+      { id:"ng-westernunion", country:"NG", provider:"Western Union (example only)", fee:3.99, rate:1675, funding:"bank", payout:"cash", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." },
+      { id:"ng-moneygram", country:"NG", provider:"MoneyGram (example only)", fee:null, rate:null, funding:"bank", payout:"mobile", status:"missing", quoteTime:"No quote", note:"Missing-data example; cannot be ranked." },
+      { id:"ng-worldremit", country:"NG", provider:"WorldRemit (example only)", fee:1.99, rate:1635, funding:"bank", payout:"bank", status:"sample", quoteTime:"Fictional timestamp", note:"Illustrative only; corridor support not verified." }
+    ];
+
+    const countryInput = document.getElementById("country");
+    const corridorEyebrow = document.getElementById("corridor-eyebrow");
+    const amountInput = document.getElementById("amount");
+    const fundingInput = document.getElementById("funding");
+    const payoutInput = document.getElementById("payout");
+    const sortInput = document.getElementById("sort");
+    const list = document.getElementById("provider-list");
+    const summary = document.getElementById("result-summary");
+    const feedbackMessage = document.getElementById("feedback-message");
+
+    const money = (value, currency, digits = 2) => {
+      if (!Number.isFinite(value)) return "Unavailable";
+      return new Intl.NumberFormat("en-IE", {
+        style: "currency", currency, minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      }).format(value);
+    };
+    const number = (value, digits = 2) => {
+      if (!Number.isFinite(value)) return "Unavailable";
+      return new Intl.NumberFormat("en-IE", {
+        minimumFractionDigits: digits, maximumFractionDigits: digits
+      }).format(value);
+    };
+    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[char]));
+
+    function getRows() {
+      const amount = Number(amountInput.value);
+      const country = countryInput.value;
+      const funding = fundingInput.value;
+      const payout = payoutInput.value;
+
+      if (!Number.isFinite(amount) || amount <= 0 || amount > 100000) {
+        return { amount: null, rows: [], error: "Enter an amount greater than €0 and no more than €100,000." };
+      }
+
+      const matching = demoQuotes.filter(q => q.country === country && q.funding === funding && q.payout === payout);
+      const rows = matching.map(q => {
+        // This simple arithmetic is for demonstration only. Real providers may
+        // apply fees differently; use their verified displayed payout in production.
+        const received = Number.isFinite(q.fee) && Number.isFinite(q.rate)
+          ? Math.max(0, amount - q.fee) * q.rate : null;
+        return { ...q, received, comparable: q.status === "sample" && Number.isFinite(received) };
+      });
+
+      return { amount, rows, error: null };
+    }
+
+    function render() {
+      const result = getRows();
+      list.innerHTML = "";
+
+      if (result.error) {
+        list.innerHTML = `<div class="provider-row"><div class="no-data">${escapeHtml(result.error)}</div></div>`;
+        summary.textContent = "Correct the amount to see the demonstration.";
+        return;
+      }
+
+      const { amount, rows } = result;
+      const destination = currencies[countryInput.value];
+      corridorEyebrow.textContent = `Ireland → ${destination.name}`;
+      summary.textContent = `Illustrative results for ${money(amount, "EUR", 2)} • Ireland to ${destination.name} • no live rates`;
+
+      const sortBy = sortInput.value;
+      rows.sort((a, b) => {
+        if (sortBy === "name") return a.provider.localeCompare(b.provider);
+        if (sortBy === "fee") {
+          const af = Number.isFinite(a.fee) ? a.fee : Infinity;
+          const bf = Number.isFinite(b.fee) ? b.fee : Infinity;
+          return af - bf;
+        }
+        const av = a.comparable ? a.received : -Infinity;
+        const bv = b.comparable ? b.received : -Infinity;
+        return bv - av;
+      });
+
+      if (!rows.length) {
+        list.innerHTML = `<div class="provider-row"><div class="no-data">No demonstration quotes match these funding and payout methods. Try another combination.</div></div>`;
+        return;
+      }
+
+      const ranked = rows.filter(r => r.comparable);
+      rows.forEach((q) => {
+        let statusLabel = "Demo data";
+        let statusClass = "sample";
+        if (q.status === "stale") { statusLabel = "Stale — excluded"; statusClass = "stale"; }
+        if (q.status === "missing" || !Number.isFinite(q.received)) { statusLabel = "Incomplete — not ranked"; statusClass = "missing"; }
+        if (q.status === "sample") { statusLabel = "Fictional sample"; statusClass = "sample"; }
+
+        const rank = q.comparable ? ranked.findIndex(r => r.id === q.id) + 1 : null;
+        const best = rank === 1 && sortBy === "payout";
+        const row = document.createElement("article");
+        row.className = `provider-row${best ? " best" : ""}`;
+
+        const feeText = Number.isFinite(q.fee) ? money(q.fee, "EUR") : "Unavailable";
+        const rateText = Number.isFinite(q.rate) ? `${number(q.rate, 2)} KES / EUR` : "Unavailable";
+        const destination = currencies[countryInput.value];
+        const payoutText = Number.isFinite(q.received) ? money(q.received, destination.currency, destination.digits) : "Unavailable";
+        const rankMarkup = rank ? `<span class="rank">#${rank}</span>` : "";
+        row.innerHTML = `
+          <div class="provider-cell" data-label="Provider">
+            <div class="provider-name">${rankMarkup}${escapeHtml(q.provider)}</div>
+            <div class="provider-sub">${escapeHtml(q.note)}</div>
+          </div>
+          <div class="provider-cell" data-label="Transfer fee"><div>${escapeHtml(feeText)}</div><div class="subvalue">Fictional</div></div>
+          <div class="provider-cell" data-label="Sample rate"><div>${escapeHtml(rateText)}</div><div class="subvalue">Not a live rate</div></div>
+          <div class="provider-cell" data-label="Recipient receives"><div class="payout">${escapeHtml(payoutText)}</div><div class="subvalue">${q.comparable ? "Calculated demo payout" : "Cannot be ranked"}</div></div>
+          <div class="provider-cell" data-label="Quote status">
+            <div class="provider-actions">
+              <span class="status ${statusClass}">${escapeHtml(statusLabel)}</span>
+              <span class="subvalue">${escapeHtml(q.quoteTime)}</span>
+            </div>
+          </div>`;
+        list.appendChild(row);
+      });
+
+      if (!ranked.length) {
+        const note = document.createElement("div");
+        note.className = "provider-row";
+        note.innerHTML = `<div class="no-data">No fresh, complete demo quotes match this combination. Try another funding or payout method. In a real version, never invent a quote to fill this gap.</div>`;
+        list.appendChild(note);
+      }
+    }
+
+    [countryInput, amountInput, fundingInput, payoutInput, sortInput].forEach(el => {
+      el.addEventListener("input", render);
+      el.addEventListener("change", render);
+    });
+
+    document.querySelectorAll("[data-feedback]").forEach(button => {
+      button.addEventListener("click", () => {
+        const labels = {
+          payout: "highest amount received",
+          cost: "true total cost",
+          speed: "delivery speed",
+          trust: "trust and reliability"
+        };
+        feedbackMessage.textContent = `Thanks — your selected priority is “${labels[button.dataset.feedback]}”. This demo stores nothing and sends no feedback to a server.`;
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>
